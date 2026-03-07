@@ -1,0 +1,56 @@
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native - generated folders (managed workflow)
+/ios
+/android
+
+# Native - build outputs (bare/dev-build workflow)
+ios/build/
+ios/Pods/
+android/build/
+android/app/build/
+android/.gradle/
+
+# Kotlin
+.kotlin/
+
+# Native artifacts
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# Debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# Environment variables
+.env
+.env.local
+.env*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# IDE
+.idea/
+
+# Testing
+coverage/
