@@ -7,6 +7,9 @@ dist/
 web-build/
 expo-env.d.ts
 
+# Tamagui
+.tamagui/
+
 # Native - generated folders (managed workflow)
 /ios
 /android
