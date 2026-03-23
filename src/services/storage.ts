@@ -1,7 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { ClothingItem } from '@app-types/index';
-import { apiAddClothingItem, apiDeleteClothingItem, apiGetClothingItems } from '@services/api';
+import {
+  apiAddClothingItem,
+  apiDeleteClothingItem,
+  apiGetClothingItems,
+  apiUploadClothingImage,
+} from '@services/api';
 
 const WARDROBE_ITEMS = 'WARDROBE_ITEMS';
 
@@ -24,14 +29,20 @@ export async function saveClothingItems(items: ClothingItem[]): Promise<void> {
 
 export async function addClothingItem(item: ClothingItem): Promise<ClothingItem> {
   try {
-    const saved = await apiAddClothingItem(item);
-    // Update local cache
+    // 1. Upload image to Supabase Storage
+    const { image_url, image_path } = await apiUploadClothingImage(item.imageUri);
+
+    // 2. Create the clothing item with the public URL
+    const uploaded: ClothingItem = { ...item, imageUri: image_url, imagePath: image_path };
+    const saved = await apiAddClothingItem(uploaded);
+
+    // 3. Update local cache
     const items = await getLocalItems();
     items.unshift(saved);
     await saveClothingItems(items);
     return saved;
   } catch {
-    // Fallback: save locally only
+    // Fallback: save locally only with local URI
     const items = await getLocalItems();
     items.unshift(item);
     await saveClothingItems(items);
