@@ -16,6 +16,7 @@ export default function ClothingDetailScreen() {
     const navigation = useNavigation<Nav>();
     const route = useRoute<DetailRoute>();
     const [item, setItem] = useState<ClothingItem | null>(null);
+    console.log("🚀 ~ ClothingDetailScreen ~ item:", item)
 
     useEffect(() => {
         getClothingItems().then((items) => {
@@ -50,11 +51,23 @@ export default function ClothingDetailScreen() {
     return (
         <ScrollView flex={1} bg="$background" contentContainerStyle={{ pb: 40 }}>
             <YStack gap="$4" p="$4">
-                <Image
-                    source={{ uri: item.imageUri }}
-                    style={{ width: '100%', height: 350, borderRadius: 16 }}
-                    resizeMode="cover"
-                />
+                {item.imageUri ? (
+                    <Image
+                        source={{ uri: item.imageUri }}
+                        style={{ width: '100%', height: 350, borderRadius: 16 }}
+                        resizeMode="cover"
+                    />
+                ) : (
+                    <YStack
+                        height={350}
+                        bg="$gray3"
+                        rounded="$4"
+                        justify="center"
+                        items="center"
+                    >
+                        <Text color="$gray9">No image available</Text>
+                    </YStack>
+                )}
 
                 <YStack gap="$2">
                     <Text fontSize="$8" fontWeight="700" textTransform="capitalize">
