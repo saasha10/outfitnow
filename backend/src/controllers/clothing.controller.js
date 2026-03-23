@@ -2,7 +2,8 @@ const clothingService = require('../services/clothing.service');
 
 async function addClothing(req, res) {
   try {
-    const { user_id, image_uri, category, subcategory, color, style, season } = req.body;
+    const { user_id, image_url, image_path, category, subcategory, color, style, season } =
+      req.body;
 
     if (!user_id || !category) {
       return res.status(400).json({ error: 'user_id and category are required' });
@@ -10,7 +11,8 @@ async function addClothing(req, res) {
 
     const item = await clothingService.addClothingItem({
       user_id,
-      image_uri,
+      image_url,
+      image_path,
       category,
       subcategory,
       color,

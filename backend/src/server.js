@@ -6,6 +6,7 @@ const cors = require('cors');
 
 const clothingRoutes = require('./routes/clothing.routes');
 const outfitRoutes = require('./routes/outfit.routes');
+const uploadRoutes = require('./routes/upload.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +18,7 @@ app.use(express.json());
 // Routes
 app.use('/clothing', clothingRoutes);
 app.use('/outfit', outfitRoutes);
+app.use('/upload', uploadRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
