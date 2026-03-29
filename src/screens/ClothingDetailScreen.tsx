@@ -50,15 +50,30 @@ export default function ClothingDetailScreen() {
     return (
         <ScrollView flex={1} bg="$background" contentContainerStyle={{ pb: 40 }}>
             <YStack gap="$4" p="$4">
-                <Image
-                    source={{ uri: item.imageUri }}
-                    style={{ width: '100%', height: 350, borderRadius: 16 }}
-                    resizeMode="cover"
-                />
+                {item.imageUrl ? (
+                    <Image
+                        source={{ uri: item.imageUrl }}
+                        style={{ width: '100%', height: 350, borderRadius: 16 }}
+                        resizeMode="cover"
+                    />
+                ) : (
+                    <YStack
+                        height={350}
+                        bg="$gray3"
+                        rounded="$4"
+                        justify="center"
+                        items="center"
+                    >
+                        <Text color="$gray9">No image available</Text>
+                    </YStack>
+                )}
 
                 <YStack gap="$2">
-                    <Text fontSize="$8" fontWeight="700" textTransform="capitalize">
-                        {item.type}
+                    <Text fontSize="$8" fontWeight="700">
+                        {item.name}
+                    </Text>
+                    <Text fontSize="$5" color="$gray10" textTransform="capitalize">
+                        {item.category} · {item.type}
                     </Text>
                     <Text fontSize="$5" color="$gray10">
                         Color: {item.color}
@@ -66,6 +81,11 @@ export default function ClothingDetailScreen() {
                     {item.season && (
                         <Text fontSize="$5" color="$gray10" textTransform="capitalize">
                             Season: {item.season}
+                        </Text>
+                    )}
+                    {item.brand && (
+                        <Text fontSize="$5" color="$gray10">
+                            Brand: {item.brand}
                         </Text>
                     )}
                 </YStack>

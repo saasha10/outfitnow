@@ -5,19 +5,21 @@ import { useState } from 'react';
 import { Alert, Image } from 'react-native';
 import { Button, Input, ScrollView, Text, XStack, YStack } from 'tamagui';
 
-import { ClothingItem, ClothingType, Season } from '@app-types/index';
+import { ClothingCategory, ClothingItem, Season } from '@app-types/index';
 import { RootStackParamList } from '@app-types/navigation';
 import { addClothingItem } from '@services/storage';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'AddClothing'>;
 
-const CLOTHING_TYPES: ClothingType[] = ['shirt', 'pants', 'shoes', 'jacket', 'other'];
-const SEASONS: Season[] = ['summer', 'winter', 'all'];
+const CATEGORIES: ClothingCategory[] = ['top', 'bottom', 'shoes', 'outerwear', 'accessory'];
+const SEASONS: Season[] = ['summer', 'winter', 'spring', 'autumn', 'all'];
 
 export default function AddClothingScreen() {
     const navigation = useNavigation<Nav>();
     const [imageUri, setImageUri] = useState<string | null>(null);
-    const [clothingType, setClothingType] = useState<ClothingType>('shirt');
+    const [name, setName] = useState('');
+    const [category, setCategory] = useState<ClothingCategory>('top');
+    const [type, setType] = useState('');
     const [color, setColor] = useState('');
     const [season, setSeason] = useState<Season | undefined>(undefined);
 
@@ -47,6 +49,10 @@ export default function AddClothingScreen() {
             Alert.alert('Missing image', 'Please select an image first.');
             return;
         }
+        if (!name.trim()) {
+            Alert.alert('Missing name', 'Please enter a name for the item.');
+            return;
+        }
         if (!color.trim()) {
             Alert.alert('Missing color', 'Please enter a color.');
             return;
@@ -54,9 +60,11 @@ export default function AddClothingScreen() {
 
         const item: ClothingItem = {
             id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
-            imageUri,
-            type: clothingType,
-            color: color.trim(),
+            name: name.trim(),
+            imageUrl: imageUri,
+            category,
+            type: type.trim() || category,
+            color: color.trim().toLowerCase(),
             season,
             createdAt: Date.now(),
         };
@@ -92,27 +100,47 @@ export default function AddClothingScreen() {
                 </Button>
 
                 <YStack gap="$2">
-                    <Text fontWeight="600">Type</Text>
+                    <Text fontWeight="600">Name</Text>
+                    <Input
+                        size="$4"
+                        placeholder="e.g. White T-Shirt, Blue Jeans"
+                        value={name}
+                        onChangeText={setName}
+                    />
+                </YStack>
+
+                <YStack gap="$2">
+                    <Text fontWeight="600">Category</Text>
                     <XStack flexWrap="wrap" gap="$2">
-                        {CLOTHING_TYPES.map((t) => (
+                        {CATEGORIES.map((c) => (
                             <Button
-                                key={t}
+                                key={c}
                                 size="$3"
-                                theme={clothingType === t ? 'accent' : undefined}
-                                variant={clothingType === t ? undefined : 'outlined'}
-                                onPress={() => setClothingType(t)}
+                                theme={category === c ? 'accent' : undefined}
+                                variant={category === c ? undefined : 'outlined'}
+                                onPress={() => setCategory(c)}
                             >
-                                {t.charAt(0).toUpperCase() + t.slice(1)}
+                                {c.charAt(0).toUpperCase() + c.slice(1)}
                             </Button>
                         ))}
                     </XStack>
                 </YStack>
 
                 <YStack gap="$2">
+                    <Text fontWeight="600">Type (optional)</Text>
+                    <Input
+                        size="$4"
+                        placeholder="e.g. tshirt, hoodie, jeans, sneakers"
+                        value={type}
+                        onChangeText={setType}
+                    />
+                </YStack>
+
+                <YStack gap="$2">
                     <Text fontWeight="600">Color</Text>
                     <Input
                         size="$4"
-                        placeholder="e.g. Black, Blue, Red"
+                        placeholder="e.g. black, blue, red"
                         value={color}
                         onChangeText={setColor}
                     />
@@ -120,12 +148,11 @@ export default function AddClothingScreen() {
 
                 <YStack gap="$2">
                     <Text fontWeight="600">Season (optional)</Text>
-                    <XStack gap="$2">
+                    <XStack flexWrap="wrap" gap="$2">
                         {SEASONS.map((s) => (
                             <Button
                                 key={s}
                                 size="$3"
-                                flex={1}
                                 theme={season === s ? 'accent' : undefined}
                                 variant={season === s ? undefined : 'outlined'}
                                 onPress={() => setSeason(season === s ? undefined : s)}
