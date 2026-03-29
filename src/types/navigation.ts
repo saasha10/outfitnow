@@ -1,5 +1,8 @@
 export type RootStackParamList = {
   Home: undefined;
+  AddClothing: undefined;
+  Wardrobe: undefined;
+  ClothingDetail: { itemId: string };
 };
 
 declare global {
