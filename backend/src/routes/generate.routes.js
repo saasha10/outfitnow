@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const outfitController = require('../controllers/outfit.controller');
 
-router.get('/', outfitController.getOutfits);
-router.patch('/:id/like', outfitController.likeOutfit);
+router.post('/', outfitController.generateOutfits);
 
 module.exports = router;

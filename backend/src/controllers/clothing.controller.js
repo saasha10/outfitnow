@@ -1,23 +1,49 @@
 const clothingService = require('../services/clothing.service');
 
+const VALID_CATEGORIES = ['top', 'bottom', 'shoes', 'outerwear', 'accessory'];
+
 async function addClothing(req, res) {
   try {
-    const { user_id, image_url, image_path, category, subcategory, color, style, season } =
-      req.body;
+    const {
+      user_id,
+      name,
+      category,
+      type,
+      color,
+      secondary_color,
+      style,
+      season,
+      occasion,
+      temperature_min,
+      temperature_max,
+      brand,
+      image_url,
+    } = req.body;
 
     if (!user_id || !category) {
       return res.status(400).json({ error: 'user_id and category are required' });
     }
 
+    if (!VALID_CATEGORIES.includes(category)) {
+      return res
+        .status(400)
+        .json({ error: `category must be one of: ${VALID_CATEGORIES.join(', ')}` });
+    }
+
     const item = await clothingService.addClothingItem({
       user_id,
-      image_url,
-      image_path,
+      name,
       category,
-      subcategory,
+      type,
       color,
+      secondary_color,
       style,
       season,
+      occasion,
+      temperature_min,
+      temperature_max,
+      brand,
+      image_url,
     });
 
     res.status(201).json(item);
@@ -29,13 +55,13 @@ async function addClothing(req, res) {
 
 async function getClothing(req, res) {
   try {
-    const { userId } = req.params;
+    const { user_id } = req.query;
 
-    if (!userId) {
-      return res.status(400).json({ error: 'userId parameter is required' });
+    if (!user_id) {
+      return res.status(400).json({ error: 'user_id query parameter is required' });
     }
 
-    const items = await clothingService.getClothingByUserId(userId);
+    const items = await clothingService.getClothingByUserId(user_id);
     res.json(items);
   } catch (error) {
     console.error('Error fetching clothing:', error.message);

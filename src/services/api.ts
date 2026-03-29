@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { ClothingItem, ClothingType, Season } from '@app-types/index';
+import { ClothingItem, Outfit } from '@app-types/index';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? '';
 
@@ -22,66 +22,83 @@ apiClient.interceptors.response.use(
   },
 );
 
-// --- Type mapping between frontend and backend ---
+// --- Constants ---
 
-const DEVICE_USER_ID = 'device_user_123';
+const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+// --- Type mapping between frontend and backend ---
 
 interface BackendClothingItem {
   id: string;
   user_id: string;
-  image_url: string;
-  image_path: string;
+  name: string;
+  image_url: string | null;
   category: string;
-  subcategory: string;
+  type: string;
   color: string;
-  style: string;
-  season: string;
+  secondary_color: string | null;
+  style: string | null;
+  season: string | null;
+  occasion: string | null;
+  temperature_min: number | null;
+  temperature_max: number | null;
+  brand: string | null;
   created_at: string;
 }
 
-function typeToCategory(type: ClothingType): { category: string; subcategory: string } {
-  switch (type) {
-    case 'shirt':
-      return { category: 'top', subcategory: 'shirt' };
-    case 'pants':
-      return { category: 'bottom', subcategory: 'pants' };
-    case 'shoes':
-      return { category: 'shoes', subcategory: 'sneakers' };
-    case 'jacket':
-      return { category: 'jacket', subcategory: 'jacket' };
-    case 'other':
-      return { category: 'other', subcategory: 'other' };
-  }
+interface BackendOutfit {
+  id: string;
+  user_id: string;
+  top: BackendClothingItem;
+  bottom: BackendClothingItem;
+  shoes: BackendClothingItem;
+  outerwear: BackendClothingItem | null;
+  style: string | null;
+  occasion: string | null;
+  season: string | null;
+  ai_score: number;
+  liked: boolean;
+  reason?: string;
+  created_at: string;
 }
 
-function categoryToType(category: string): ClothingType {
-  switch (category) {
-    case 'top':
-      return 'shirt';
-    case 'bottom':
-      return 'pants';
-    case 'shoes':
-      return 'shoes';
-    case 'jacket':
-      return 'jacket';
-    default:
-      return 'other';
-  }
-}
-
-function backendToFrontend(item: BackendClothingItem): ClothingItem {
+function clothingToFrontend(item: BackendClothingItem): ClothingItem {
   return {
     id: item.id,
-    imageUri: item.image_url,
-    imagePath: item.image_path,
-    type: categoryToType(item.category),
+    name: item.name,
+    imageUrl: item.image_url,
+    category: item.category as ClothingItem['category'],
+    type: item.type,
     color: item.color,
-    season: (item.season as Season) || undefined,
+    secondaryColor: item.secondary_color ?? undefined,
+    style: (item.style as ClothingItem['style']) ?? undefined,
+    season: (item.season as ClothingItem['season']) ?? undefined,
+    occasion: (item.occasion as ClothingItem['occasion']) ?? undefined,
+    temperatureMin: item.temperature_min ?? undefined,
+    temperatureMax: item.temperature_max ?? undefined,
+    brand: item.brand ?? undefined,
     createdAt: new Date(item.created_at).getTime(),
   };
 }
 
-// --- API methods ---
+function outfitToFrontend(outfit: BackendOutfit): Outfit {
+  return {
+    id: outfit.id,
+    top: clothingToFrontend(outfit.top),
+    bottom: clothingToFrontend(outfit.bottom),
+    shoes: clothingToFrontend(outfit.shoes),
+    outerwear: outfit.outerwear ? clothingToFrontend(outfit.outerwear) : null,
+    style: outfit.style,
+    occasion: outfit.occasion,
+    season: outfit.season,
+    aiScore: outfit.ai_score,
+    liked: outfit.liked,
+    reason: outfit.reason,
+    createdAt: new Date(outfit.created_at).getTime(),
+  };
+}
+
+// --- Clothing API ---
 
 export async function apiUploadClothingImage(
   localUri: string,
@@ -98,7 +115,7 @@ export async function apiUploadClothingImage(
     name: filename,
     type: mimeType,
   } as unknown as Blob);
-  formData.append('user_id', userId ?? DEVICE_USER_ID);
+  formData.append('user_id', userId ?? DEFAULT_USER_ID);
 
   const { data } = await apiClient.post<{ image_url: string; image_path: string }>(
     '/upload/clothing-image',
@@ -109,25 +126,57 @@ export async function apiUploadClothingImage(
 }
 
 export async function apiAddClothingItem(item: ClothingItem): Promise<ClothingItem> {
-  const mapped = typeToCategory(item.type);
   const { data } = await apiClient.post<BackendClothingItem>('/clothing', {
-    user_id: DEVICE_USER_ID,
-    image_url: item.imageUri,
-    image_path: item.imagePath,
-    category: mapped.category,
-    subcategory: mapped.subcategory,
+    user_id: DEFAULT_USER_ID,
+    name: item.name,
+    image_url: item.imageUrl,
+    category: item.category,
+    type: item.type,
     color: item.color,
-    style: 'casual',
+    secondary_color: item.secondaryColor,
+    style: item.style ?? 'casual',
     season: item.season ?? 'all',
+    occasion: item.occasion,
+    temperature_min: item.temperatureMin,
+    temperature_max: item.temperatureMax,
+    brand: item.brand,
   });
-  return backendToFrontend(data);
+  return clothingToFrontend(data);
 }
 
 export async function apiGetClothingItems(): Promise<ClothingItem[]> {
-  const { data } = await apiClient.get<BackendClothingItem[]>(`/clothing/${DEVICE_USER_ID}`);
-  return data.map(backendToFrontend);
+  const { data } = await apiClient.get<BackendClothingItem[]>('/clothing', {
+    params: { user_id: DEFAULT_USER_ID },
+  });
+  return data.map(clothingToFrontend);
 }
 
 export async function apiDeleteClothingItem(id: string): Promise<void> {
   await apiClient.delete(`/clothing/${id}`);
+}
+
+// --- Outfit API ---
+
+export async function apiGenerateOutfits(occasion?: string, season?: string): Promise<Outfit[]> {
+  const { data } = await apiClient.post<{ outfits: BackendOutfit[] }>(
+    '/generate-outfits',
+    {
+      user_id: DEFAULT_USER_ID,
+      occasion: occasion ?? 'daily',
+      season: season ?? 'all',
+    },
+    { timeout: 60000 },
+  );
+  return (data.outfits || []).map(outfitToFrontend);
+}
+
+export async function apiGetOutfits(): Promise<Outfit[]> {
+  const { data } = await apiClient.get<BackendOutfit[]>('/outfits', {
+    params: { user_id: DEFAULT_USER_ID },
+  });
+  return data.map(outfitToFrontend);
+}
+
+export async function apiLikeOutfit(outfitId: string, liked: boolean): Promise<void> {
+  await apiClient.patch(`/outfits/${outfitId}/like`, { liked });
 }

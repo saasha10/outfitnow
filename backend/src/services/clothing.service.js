@@ -1,11 +1,7 @@
 const supabase = require('../config/supabaseClient');
 
 async function addClothingItem(item) {
-  const { data, error } = await supabase
-    .from('clothing_items')
-    .insert(item)
-    .select()
-    .single();
+  const { data, error } = await supabase.from('clothing_items').insert(item).select().single();
 
   if (error) throw error;
   return data;
@@ -16,6 +12,18 @@ async function getClothingByUserId(userId) {
     .from('clothing_items')
     .select('*')
     .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+}
+
+async function getClothingByCategory(userId, category) {
+  const { data, error } = await supabase
+    .from('clothing_items')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('category', category)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -37,5 +45,6 @@ async function deleteClothingItem(id) {
 module.exports = {
   addClothingItem,
   getClothingByUserId,
+  getClothingByCategory,
   deleteClothingItem,
 };

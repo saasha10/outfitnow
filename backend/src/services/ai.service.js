@@ -1,24 +1,28 @@
 const openai = require('../config/openaiClient');
 
-async function rankOutfits(candidates, occasion, weather) {
+async function rankOutfits(candidates, occasion, season) {
   const candidatesStr = JSON.stringify(candidates, null, 2);
 
   const prompt = [
-    'You are a fashion stylist.',
+    'You are an expert fashion stylist.',
     '',
-    'Your job is to rank outfit combinations based on:',
-    '- Color harmony',
-    '- Style compatibility',
-    '- Occasion: ' + occasion,
-    '- Weather: ' + weather,
+    'Rank these outfit combinations from best to worst.',
     '',
-    'Here are the candidate outfits (each identified by index):',
+    'Evaluation criteria:',
+    '- Color harmony between all pieces',
+    '- Style consistency across the outfit',
+    '- Occasion suitability: ' + (occasion || 'daily'),
+    '- Season appropriateness: ' + (season || 'all'),
     '',
+    'Candidates:',
     candidatesStr,
     '',
-    'Return the best 2 outfits as a JSON object with this exact format:',
-    '{ "outfits": [ { "index": <number>, "reason": "<short reason>" }, { "index": <number>, "reason": "<short reason>" } ] }',
+    'For each candidate, assign a score from 0 to 10 (float, e.g. 7.5).',
     '',
+    'Return a JSON object with this exact format:',
+    '{ "rankings": [ { "index": <number>, "score": <float 0-10>, "reason": "<short reason>" } ] }',
+    '',
+    'Sort by score descending. Return ALL candidates ranked.',
     'Return ONLY valid JSON, no markdown or extra text.',
   ].join('\n');
 
